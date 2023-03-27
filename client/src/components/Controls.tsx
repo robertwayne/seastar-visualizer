@@ -81,9 +81,9 @@ export const Controls = (props: {
                     />
                 </label>
 
-                <label for="rows" class="flex flex-col self-start text-start">
+                <label for="step" class="flex flex-col self-start text-start">
                     <div>
-                        Step <span class="italic">(10-1000)</span>
+                        Step <span class="italic">(0-1000)</span>
                     </div>
 
                     <input
@@ -101,7 +101,7 @@ export const Controls = (props: {
                                 (e.target as HTMLInputElement).value
                             )
 
-                            const clamped_value = clamp(step, 10, 1000)
+                            const clamped_value = clamp(step, 0, 1000)
 
                             props.setStep(clamped_value)
                             e.target.value = clamped_value.toString()
