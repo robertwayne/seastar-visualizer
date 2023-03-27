@@ -1,5 +1,7 @@
 import { Position, Size } from "../routes/Home"
 
+import { clamp } from "../clamp"
+
 export const Controls = (props: {
     size: () => Size
     setSize: (size: Size) => void
@@ -9,14 +11,14 @@ export const Controls = (props: {
     setStep: (step: number) => void
 }) => {
     return (
-        <div class="flex flex-grow flex-col rounded-lg border-2 border-light-secondary dark:border-dark-tertiary p-2 text-center text-sm lg:p-4 lg:text-lg">
+        <div class="flex flex-grow flex-col rounded-lg border-2 border-light-secondary p-2 text-center text-sm dark:border-dark-tertiary lg:p-4 lg:text-lg">
             <h2 class="self-center text-2xl font-bold ">Parameters</h2>
 
             <span>Left-click will add/remove a wall.</span>
             <span>Right-click will change the ending position.</span>
             <span>Middle-click will change the starting position.</span>
 
-            <div class="flex items-end justify-center  gap-12 p-2 pt-4 flex-wrap">
+            <div class="flex flex-wrap items-end  justify-center gap-12 p-2 pt-4">
                 <label for="rows" class="flex flex-col self-start text-start">
                     <div>
                         Rows <span class="italic">(10-100)</span>
@@ -31,13 +33,19 @@ export const Controls = (props: {
                         value="10"
                         class="input-field"
                         onChange={(e) => {
+                            if (!(e.target instanceof HTMLInputElement)) return
+
                             const rows = parseInt(
                                 (e.target as HTMLInputElement).value
                             )
+
+                            const clamped_value = clamp(rows, 10, 100)
+
                             props.setSize({
                                 cols: props.size().cols,
-                                rows,
+                                rows: clamped_value,
                             })
+                            e.target.value = clamped_value.toString()
                         }}
                     />
                 </label>
@@ -56,13 +64,19 @@ export const Controls = (props: {
                         value="10"
                         class="input-field"
                         onChange={(e) => {
+                            if (!(e.target instanceof HTMLInputElement)) return
+
                             const cols = parseInt(
                                 (e.target as HTMLInputElement).value
                             )
+
+                            const clamped_value = clamp(cols, 10, 100)
+
                             props.setSize({
-                                cols,
+                                cols: clamped_value,
                                 rows: props.size().rows,
                             })
+                            e.target.value = clamped_value.toString()
                         }}
                     />
                 </label>
@@ -81,10 +95,16 @@ export const Controls = (props: {
                         value="25"
                         class="input-field"
                         onInput={(e) => {
+                            if (!(e.target instanceof HTMLInputElement)) return
+
                             const step = parseInt(
                                 (e.target as HTMLInputElement).value
                             )
-                            props.setStep(step)
+
+                            const clamped_value = clamp(step, 10, 1000)
+
+                            props.setStep(clamped_value)
+                            e.target.value = clamped_value.toString()
                         }}
                     />
                 </label>

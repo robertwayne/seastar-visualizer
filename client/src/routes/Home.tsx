@@ -3,6 +3,7 @@ import { createEffect, createSignal, onMount } from "solid-js"
 import { ColorKey } from "../components/ColorKey"
 import { Controls } from "../components/Controls"
 import ExternalLink from "../components/ExternalLink"
+import { clamp } from "../clamp"
 
 export interface Size {
     rows: number
@@ -44,8 +45,8 @@ const Home = () => {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                width: size().cols,
-                height: size().rows,
+                width: clamp(size().cols, 10, 100),
+                height: clamp(size().rows, 10, 100),
                 startX: start().x,
                 startY: start().y,
                 endX: end().x,
