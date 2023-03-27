@@ -331,6 +331,12 @@ const Home = () => {
                 </div>
             </div>
 
+            {path().length > 0 ? (
+                <span class="mt-4 font-bold text-xl">
+                    Ideal path requires {path().length - 2} steps.
+                </span>
+            ) : <span class="mt-4 font-bold text-xl">No valid path found.</span>}
+
             <canvas
                 id="canvas"
                 class="mt-2 flex aspect-square h-full w-full border-2 border-tiles-wall transition lg:mt-8 lg:h-fit lg:w-2/3"
