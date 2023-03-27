@@ -9,14 +9,14 @@ export const Controls = (props: {
     setStep: (step: number) => void
 }) => {
     return (
-        <div class="flex flex-grow flex-col rounded-lg border-2 border-light-secondary p-2 text-center text-sm lg:p-4 lg:text-lg">
+        <div class="flex flex-grow flex-col rounded-lg border-2 border-light-secondary dark:border-dark-tertiary p-2 text-center text-sm lg:p-4 lg:text-lg">
             <h2 class="self-center text-2xl font-bold ">Parameters</h2>
 
             <span>Left-click will add/remove a wall.</span>
             <span>Right-click will change the ending position.</span>
             <span>Middle-click will change the starting position.</span>
 
-            <div class="flex flex-col items-end justify-end gap-4 p-2">
+            <div class="flex items-end justify-center  gap-12 p-2 pt-4 flex-wrap">
                 <label for="rows" class="flex flex-col self-start text-start">
                     <div>
                         Rows <span class="italic">(10-100)</span>
