@@ -118,32 +118,14 @@ const Home = () => {
         }
 
         // Fill in the start tile.
-        contextRef.fillStyle = START_COLOR
-        contextRef.fillRect(
-            start().x * tileWidth,
-            start().y * tileHeight,
-            tileWidth,
-            tileHeight
-        )
+        drawTile(start().x, start().y, tileWidth, tileHeight, START_COLOR)
 
         // Fill in the end tile.
-        contextRef.fillStyle = END_COLOR
-        contextRef.fillRect(
-            end().x * tileWidth,
-            end().y * tileHeight,
-            tileWidth,
-            tileHeight
-        )
+        drawTile(end().x, end().y, tileWidth, tileHeight, END_COLOR)
 
         // Fill in the walls.
         for (const wall of walls()) {
-            contextRef.fillStyle = WALL_COLOR
-            contextRef.fillRect(
-                wall.x * tileWidth,
-                wall.y * tileHeight,
-                tileWidth,
-                tileHeight
-            )
+            drawTile(wall.x, wall.y, tileWidth, tileHeight, WALL_COLOR)
         }
     }
 
@@ -169,27 +151,35 @@ const Home = () => {
             for (const tile of path()) {
                 if (collides(tile, [start(), end(), ...walls()])) continue
 
-                contextRef.strokeStyle = "#222831"
-                contextRef.strokeRect(
-                    tile.x * tileWidth,
-                    tile.y * tileHeight,
-                    tileWidth,
-                    tileHeight
-                )
-
-                contextRef.fillStyle = PATH_COLOR
-                contextRef.fillRect(
-                    tile.x * tileWidth,
-                    tile.y * tileHeight,
-                    tileWidth,
-                    tileHeight
-                )
+                drawTile(tile.x, tile.y, tileWidth, tileHeight, PATH_COLOR)
 
                 if (step() > 0) {
                     await new Promise((resolve) => setTimeout(resolve, step()))
                 }
             }
         }, 350)
+    }
+
+    /**
+     * Draws a tile and its border at the given position with the given width,
+     * height, and color.
+     */
+    const drawTile = (x: number, y: number, width: number, height: number, color: string) => {
+        contextRef.strokeStyle = "#222831"
+        contextRef.strokeRect(
+            x * width,
+            y * height,
+            width,
+            height
+        )
+
+        contextRef.fillStyle = color
+        contextRef.fillRect(
+            x * width,
+            y * height,
+            width,
+            height
+        )
     }
 
     /**
