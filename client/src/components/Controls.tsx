@@ -102,7 +102,7 @@ export const Controls = (props: {
                                 (e.target as HTMLInputElement).value
                             )
 
-                            const clamped_value = clamp(step, 10, 1000)
+                            const clamped_value = clamp(step, 0, 1000)
 
                             props.setStep(clamped_value)
                             e.target.value = clamped_value.toString()
