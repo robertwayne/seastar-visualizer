@@ -81,7 +81,7 @@ export const Controls = (props: {
                     />
                 </label>
 
-                <label for="rows" class="flex flex-col self-start text-start">
+                <label for="step" class="flex flex-col self-start text-start">
                     <div>
                         Step (ms) <span class="italic">(0-1000)</span>
                         
