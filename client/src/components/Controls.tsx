@@ -83,7 +83,8 @@ export const Controls = (props: {
 
                 <label for="rows" class="flex flex-col self-start text-start">
                     <div>
-                        Step <span class="italic">(10-1000)</span>
+                        Step (ms) <span class="italic">(0-1000)</span>
+                        
                     </div>
 
                     <input
