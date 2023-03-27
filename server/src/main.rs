@@ -88,22 +88,7 @@ fn api_handler() -> Router {
     Router::new().route("/astar", post(post_astar))
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy)]
-struct RequestPoint {
-    x: isize,
-    y: isize,
-}
-
-impl From<Point> for RequestPoint {
-    fn from(point: Point) -> Self {
-        Self {
-            x: point.x,
-            y: point.y,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 struct PathRequestForm {
     width: isize,
     height: isize,
@@ -115,10 +100,10 @@ struct PathRequestForm {
     end_x: isize,
     #[serde(rename = "endY")]
     end_y: isize,
-    walls: Vec<RequestPoint>,
+    walls: Vec<Point>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 struct PathResponse {
     path: Vec<(isize, isize)>,
 }
@@ -153,10 +138,10 @@ async fn post_astar(
 
     let mut grid = Vec::new();
 
-    for i in 0..payload.width {
+    for y in 0..payload.width {
         let mut row = Vec::new();
-        for j in 0..payload.height {
-            if payload.walls.contains(&RequestPoint { x: i, y: j }) {
+        for x in 0..payload.height {
+            if payload.walls.contains(&Point { x, y }) {
                 row.push(Some(()))
             } else {
                 row.push(None)
