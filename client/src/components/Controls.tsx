@@ -20,9 +20,9 @@ export const Controls = (props: {
 
             <div class="flex flex-wrap items-end  justify-center gap-12 p-2 pt-4">
                 <label for="rows" class="flex flex-col self-start text-start">
-                    <div>
+                    <span>
                         Rows <span class="italic">(10-100)</span>
-                    </div>
+                    </span>
 
                     <input
                         type="number"
@@ -51,9 +51,9 @@ export const Controls = (props: {
                 </label>
 
                 <label for="cols" class="flex flex-col self-start text-start">
-                    <div>
+                    <span>
                         Columns <span class="italic">(10-100)</span>
-                    </div>
+                    </span>
 
                     <input
                         type="number"
@@ -82,10 +82,9 @@ export const Controls = (props: {
                 </label>
 
                 <label for="step" class="flex flex-col self-start text-start">
-                    <div>
+                    <span>
                         Step (ms) <span class="italic">(0-1000)</span>
-                        
-                    </div>
+                    </span>
 
                     <input
                         type="number"
