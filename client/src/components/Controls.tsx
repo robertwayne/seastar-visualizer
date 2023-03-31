@@ -14,7 +14,7 @@ export const Controls = (props: {
         <div class="flex flex-grow flex-col rounded-lg border-2 border-light-secondary p-2 text-center text-sm dark:border-dark-tertiary lg:p-4 lg:text-lg">
             <h2 class="self-center text-2xl font-bold ">Parameters</h2>
 
-            <span>Left-click will add/remove a wall.</span>
+            <span>Left-click will add or remove a wall.</span>
             <span>Right-click will change the ending position.</span>
             <span>Middle-click will change the starting position.</span>
 
