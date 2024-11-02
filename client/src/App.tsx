@@ -1,25 +1,13 @@
-import { Route, Routes } from "@solidjs/router"
-
-import { Footer } from "./components/Footer"
+import { ParentProps } from "solid-js"
 import NavHeader from "./components/NavHeader"
-import { lazy } from "solid-js"
 
-export const App = () => {
-    const Home = lazy(() => import("./routes/Home"))
-    const NotFound = lazy(() => import("./routes/NotFound"))
-
+export const App = (props: ParentProps) => {
     return (
-        <div class="flex w-full max-w-screen-2xl flex-col bg-light-primary text-light-secondary transition dark:bg-dark-primary dark:text-dark-secondary">
+        <div class="h-screen w-full flex flex-col bg-[var(--primary)] text-[var(--secondary)] transition overflow-hidden">
             <NavHeader />
-
-            <main class="flex h-full w-full grow flex-col items-center p-4">
-                <Routes>
-                    <Route path="/" component={Home} />
-                    <Route path="*" component={NotFound} />
-                </Routes>
+            <main class="flex-1 w-full max-w-screen-2xl mx-auto p-4 overflow-hidden">
+                {props.children}
             </main>
-
-            <Footer />
         </div>
     )
 }

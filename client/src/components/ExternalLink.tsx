@@ -1,6 +1,6 @@
 /**
- * Wrapper around an <a> tag leading to an external site. Always opens in a new
- * tab.
+ * Wrapper around an `<a>` tag leading to an external site. Always opens in a
+ * new tab.
  */
 const ExternalLink = ({
     to,
@@ -14,10 +14,8 @@ const ExternalLink = ({
     return (
         <a
             class={
-                "font-bold hover:text-light-highlight dark:hover:text-dark-highlight" +
-                (underline
-                    ? " border-b-2 border-b-light-highlight dark:border-b-dark-highlight"
-                    : "")
+                "font-bold hover:text-[var(--highlight)] transition" +
+                (underline ? " border-b-2 border-b-[var(--highlight)]" : "")
             }
             href={to}
             rel="noopener noreferrer"

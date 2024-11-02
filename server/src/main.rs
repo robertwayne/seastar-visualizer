@@ -1,164 +1,119 @@
 #![forbid(unsafe_code)]
 
-mod cache_control;
+mod error;
+mod handlers;
 
-use std::{error::Error, net::SocketAddr, time::Duration};
+use std::{net::SocketAddr, time::Duration};
 
 use axum::{
+    extract::Request,
     http::{
-        header::{ACCEPT, CONTENT_TYPE},
-        HeaderValue, Method, StatusCode,
+        header::{ACCEPT, CACHE_CONTROL, CONTENT_TYPE},
+        HeaderValue, Method,
     },
-    middleware,
+    middleware::{self, Next},
+    response::Response,
     routing::post,
-    Json, Router,
+    Router,
 };
-use seastar::{astar, Point};
-use serde::{Deserialize, Serialize};
+use error::AppError;
+use handlers::get_path;
+use mimalloc::MiMalloc;
 use tower_http::{
-    compression::CompressionLayer,
+    compression::{predicate::SizeAbove, CompressionLayer},
     cors::CorsLayer,
     services::{ServeDir, ServeFile},
     trace::TraceLayer,
+    CompressionLevel,
 };
-use tracing_subscriber::EnvFilter;
+use tracing::Level;
+use tracing_subscriber::{filter, layer::SubscriberExt, util::SubscriberInitExt};
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    dotenvy::dotenv().ok();
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 
-    tracing_subscriber::fmt()
-        .compact()
-        .with_env_filter(EnvFilter::from_default_env())
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<(), AppError> {
+    let filter = filter::Targets::new()
+        .with_default(Level::INFO)
+        .with_target("tower_http", Level::WARN)
+        .with_target("server", Level::DEBUG)
+        .with_target("tokio_postgres", Level::WARN);
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(filter)
         .init();
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3222));
-    let assets_dir = std::env::var("ASSETS_DIR").unwrap_or_else(|_| "dist".to_string());
-
     let router = Router::new()
         .nest("/api", api_handler())
-        .merge(static_file_handler(&assets_dir));
+        .merge(static_file_handler());
 
-    tracing::debug!("listening on {}", addr);
+    tracing::info!(target: "server", "listening on {}", addr);
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
 
-    axum::Server::bind(&addr)
-        .serve(
-            router
-                .layer(
-                    CorsLayer::new()
-                        .allow_headers([ACCEPT, CONTENT_TYPE])
-                        .max_age(Duration::from_secs(86400))
-                        .allow_origin(
-                            std::env::var("CORS_ORIGIN")
-                                .unwrap_or_else(|_| "*".to_string())
-                                .parse::<HeaderValue>()?,
-                        )
-                        .allow_methods(vec![
-                            Method::GET,
-                            Method::POST,
-                            Method::PUT,
-                            Method::DELETE,
-                            Method::OPTIONS,
-                            Method::HEAD,
-                            Method::PATCH,
-                        ]),
-                )
-                .layer(CompressionLayer::new())
-                .layer(TraceLayer::new_for_http())
-                .into_make_service(),
-        )
-        .await?;
+    axum::serve(
+        listener,
+        router
+            .layer(
+                CorsLayer::new()
+                    .allow_headers([ACCEPT, CONTENT_TYPE])
+                    .max_age(Duration::from_secs(86400))
+                    .allow_origin(
+                        std::env::var("CORS_ORIGIN")
+                            .unwrap_or_else(|_| "*".to_string())
+                            .parse::<HeaderValue>()?,
+                    )
+                    .allow_methods(vec![Method::GET, Method::POST]),
+            )
+            .layer(
+                CompressionLayer::new()
+                    .quality(CompressionLevel::Precise(4))
+                    .compress_when(SizeAbove::new(512)),
+            )
+            .layer(TraceLayer::new_for_http())
+            .into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await?;
 
     Ok(())
 }
 
-// Files returns from this route will have a cache-control header set if they
-// meet the criteria.
-fn static_file_handler(assets_dir: &str) -> Router {
+fn static_file_handler() -> Router {
     Router::new()
         .nest_service(
             "/",
-            ServeDir::new(assets_dir)
-                .not_found_service(ServeFile::new(format!("{assets_dir}/index.html"))),
+            ServeDir::new("dist").not_found_service(ServeFile::new("dist/index.html")),
         )
-        .layer(middleware::from_fn(cache_control::set_cache_header))
+        .layer(middleware::from_fn(cache_control))
 }
 
 fn api_handler() -> Router {
-    Router::new().route("/astar", post(post_astar))
+    Router::new().route("/astar", post(get_path))
 }
 
-#[derive(Debug, Deserialize)]
-struct PathRequestForm {
-    width: isize,
-    height: isize,
-    #[serde(rename = "startX")]
-    start_x: isize,
-    #[serde(rename = "startY")]
-    start_y: isize,
-    #[serde(rename = "endX")]
-    end_x: isize,
-    #[serde(rename = "endY")]
-    end_y: isize,
-    walls: Vec<Point>,
-}
+async fn cache_control(request: Request, next: Next) -> Response {
+    let mut response = next.run(request).await;
 
-#[derive(Debug, Serialize)]
-struct PathResponse {
-    path: Vec<(isize, isize)>,
-}
+    if let Some(content_type) = response.headers().get(CONTENT_TYPE) {
+        const CACHEABLE_CONTENT_TYPES: [&str; 6] = [
+            "text/css",
+            "application/javascript",
+            "image/svg+xml",
+            "image/webp",
+            "font/woff2",
+            "image/png",
+        ];
 
-async fn post_astar(
-    Json(payload): Json<PathRequestForm>,
-) -> Result<Json<PathResponse>, StatusCode> {
-    if payload.width < 1
-        || payload.height < 1
-        || payload.start_x < 0
-        || payload.start_y < 0
-        || payload.end_x < 0
-        || payload.end_y < 0
-        || payload.start_x >= payload.width
-        || payload.start_y >= payload.height
-        || payload.end_x >= payload.width
-        || payload.end_y >= payload.height
-        || payload.height > 100
-        || payload.width > 100
-    {
-        return Err(StatusCode::BAD_REQUEST);
-    }
+        if CACHEABLE_CONTENT_TYPES.iter().any(|&ct| content_type == ct) {
+            let value = format!("public, max-age={}", 60 * 60 * 24);
 
-    let start = Point {
-        x: payload.start_x,
-        y: payload.start_y,
-    };
-    let end = Point {
-        x: payload.end_x,
-        y: payload.end_y,
-    };
-
-    let mut grid = Vec::new();
-
-    for y in 0..payload.width {
-        let mut row = Vec::new();
-        for x in 0..payload.height {
-            if payload.walls.contains(&Point { x, y }) {
-                row.push(Some(()))
-            } else {
-                row.push(None)
+            if let Ok(value) = HeaderValue::from_str(&value) {
+                response.headers_mut().insert(CACHE_CONTROL, value);
             }
         }
-
-        grid.push(row);
     }
 
-    if let Some(path) = astar(&grid, start, end) {
-        Ok(Json(PathResponse {
-            path: path
-                .iter()
-                .map(|point| (point.x, point.y))
-                .collect::<Vec<(isize, isize)>>(),
-        }))
-    } else {
-        Ok(Json(PathResponse { path: Vec::new() }))
-    }
+    response
 }

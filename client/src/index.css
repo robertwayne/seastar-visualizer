@@ -1,48 +1,20 @@
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
+@import "tailwindcss";
+
+@theme {
+    --color-light-primary: #fff4e0;
+    --color-light-secondary: #2f2b5c;
+    --color-light-highlight: #457cd6;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    font: inherit;
+[data-theme="light"] {
+    --primary: var(--color-light-primary);
+    --secondary: var(--color-light-secondary);
+    --highlight: var(--color-light-highlight);
 }
 
 html,
 body,
-body > #app > div {
-    font-family: "Roboto", sans-serif;
-    font-display: swap;
-    color-scheme: dark light;
-    overflow-x: hidden;
-    min-height: 100svh;
-}
-
-a {
-    color: inherit;
-    text-decoration: none;
-}
-
-img,
-picture,
-svg,
-video {
-    display: block;
-    max-width: 100%;
-}
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer components {
-    .button {
-        @apply m-2 w-fit self-end rounded-lg bg-dark-secondary p-2 px-4 font-bold outline-none transition hover:bg-light-highlight hover:text-dark-secondary focus:ring-2 focus:ring-light-highlight active:bg-light-highlight dark:bg-dark-tertiary dark:text-dark-primary dark:hover:bg-dark-highlight dark:hover:text-dark-primary dark:focus:ring-dark-highlight dark:active:bg-dark-highlight;
-    }
-
-    .input-field {
-        @apply rounded-lg bg-dark-secondary p-2 outline-none transition focus:ring-2 focus:ring-light-highlight dark:bg-dark-tertiary dark:text-dark-primary dark:focus:ring-dark-highlight;
-    }
+#app {
+    height: 100svh;
+    max-height: 100svh;
 }
